@@ -1,0 +1,14 @@
+{
+    "name": "Webkadabra/WkdYiiBootstrap",
+	"type": "yii-extension",
+	"require": {
+        "composer/installers": "~1.0"
+    }
+    "description": "Yii Bootstrap",
+	"authors":[
+		{
+			"name":"Webkadabra",
+			"email":"hello@webkadabra.com"
+		}
+	]
+}
