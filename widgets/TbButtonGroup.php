@@ -104,6 +104,7 @@ class TbButtonGroup extends CWidget
 			if (isset($button['visible']) && $button['visible'] === false)
 				continue;
 
+			/** @see TbButton */
 			$this->controller->widget('bootstrap.widgets.TbButton', array(
 				'buttonType'=>isset($button['buttonType']) ? $button['buttonType'] : $this->buttonType,
 				'type'=>isset($button['type']) ? $button['type'] : $this->type,
