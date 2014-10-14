@@ -7,6 +7,7 @@
  * @copyright Copyright &copy; Clevertech 2012-
  * @license http://www.opensource.org/licenses/bsd-license.php New BSD License
  * @package YiiBooster bootstrap.widgets
+ * @package YiiBooster bootstrap.widgets
  */
 Yii::import('bootstrap.widgets.TbGridView');
 
@@ -236,10 +237,9 @@ class TbExtendedGridView extends TbGridView
 	{
 		$data = $this->dataProvider->getData();
 
-		if(!$this->sortableRows || !$this->getAttribute($data[0], $this->sortableAttribute))
-		{
-			return parent::renderKeys();
-		}
+        if (!$this->sortableRows || (isset($data[0]) && !isset($data[0]->attributes[(string)$this->sortableAttribute]))) {
+            parent::renderKeys();
+        }
 
 		echo CHtml::openTag('div',array(
 			'class'=>'keys',
@@ -247,7 +247,7 @@ class TbExtendedGridView extends TbGridView
 			'title'=>Yii::app()->getRequest()->getUrl(),
 		));
 		foreach($data as $d)
-			echo CHtml::tag('span',array('data-order' => $this->getAttribute($d, $this->sortableAttribute), CHtml::encode($this->getPrimaryKey($d))));
+			echo CHtml::tag('span',array('data-order' => $this->getAttribute($d, $this->sortableAttribute)), CHtml::encode($this->getPrimaryKey($d)));
 		echo "</div>\n";
 	}
 
@@ -540,40 +540,51 @@ class TbExtendedGridView extends TbGridView
 			$this->componentsAfterAjaxUpdate[] = $fixedHeaderJs;
 		}
 
-		if ($this->sortableRows)
-		{
-			if ($this->afterSortableUpdate !== null)
-			{
-				if (!($this->afterSortableUpdate instanceof CJavaScriptExpression) && strpos($this->afterSortableUpdate, 'js:') !== 0)
-				{
-					$afterSortableUpdate = new CJavaScriptExpression($this->afterSortableUpdate);
-				} else
-				{
-					$afterSortableUpdate = $this->afterSortableUpdate;
-				}
-			}
+        if ($this->sortableRows) {
+            $afterSortableUpdate = '';
+            if ($this->afterSortableUpdate !== null) {
+                if (!($this->afterSortableUpdate instanceof CJavaScriptExpression) && strpos(
+                        $this->afterSortableUpdate,
+                        'js:'
+                    ) !== 0
+                ) {
+                    $afterSortableUpdate = new CJavaScriptExpression($this->afterSortableUpdate);
+                } else {
+                    $afterSortableUpdate = $this->afterSortableUpdate;
+                }
+            }
 
-			$this->selectableRows = 1;
-			$cs->registerCoreScript('jquery.ui');
-			Yii::app()->bootstrap->registerAssetJs('jquery.sortable.gridview.js');
+            $this->selectableRows = 1;
+            $cs->registerCoreScript('jquery.ui');
+            Yii::app()->bootstrap->registerAssetJs('jquery.sortable.gridview.js');
 
-			if($this->sortableAjaxSave && $this->sortableAction !== null)
-			{
-				$sortableAction = Yii::app()->createUrl($this->sortableAction, array('sortableAttribute' => $this->sortableAttribute));
-			}
-			else
-				$sortableAction = '';
+            if ($this->sortableAjaxSave && $this->sortableAction !== null) {
+                $sortableAction = Yii::app()->createUrl(
+                    $this->sortableAction,
+                    array('sortableAttribute' => $this->sortableAttribute)
+                );
+            } else {
+                $sortableAction = '';
+            }
 
-			$afterSortableUpdate = CJavaScript::encode($afterSortableUpdate);
-			$this->componentsReadyScripts[] = "$.fn.yiiGridView.sortable('{$this->id}', '{$sortableAction}', {$afterSortableUpdate});";
-			$this->componentsAfterAjaxUpdate[] = "$.fn.yiiGridView.sortable('{$this->id}', '{$sortableAction}', {$afterSortableUpdate});";
-		}
+            $afterSortableUpdate = CJavaScript::encode($afterSortableUpdate);
+            if (Yii::app()->request->enableCsrfValidation)
+            {
+                $csrfTokenName = Yii::app()->request->csrfTokenName;
+                $csrfToken = Yii::app()->request->csrfToken;
+                $csrf = "{'$csrfTokenName':'$csrfToken' }";
+            } else
+                $csrf = '{}';
+
+            $this->componentsReadyScripts[] = "$.fn.yiiGridView.sortable('{$this->id}', '{$sortableAction}', {$afterSortableUpdate}, $csrf);";
+            $this->componentsAfterAjaxUpdate[] = "$.fn.yiiGridView.sortable('{$this->id}', '{$sortableAction}', {$afterSortableUpdate}, $csrf);";
+        }
 
 		if($this->selectableCells)
 		{
 			if($this->afterSelectableCells !== null)
 			{
-				echo strpos($this->afterSelectableCells, 'js:');
+				//echo strpos($this->afterSelectableCells, 'js:');
 				if (!($this->afterSelectableCells instanceof CJavaScriptExpression) && strpos($this->afterSelectableCells, 'js:') !== 0)
 				{
 					$afterSelectableCells = new CJavaScriptExpression($this->afterSelectableCells);
